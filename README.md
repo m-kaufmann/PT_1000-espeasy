@@ -46,7 +46,7 @@ Hier wurde der Widerstand ersetzt durch:
 
 4.7 kΩ || 47 kΩ ≈ 4.27 kΩ
 
-Ich habe den SMD-Widerstand auf dem Bord "abgelötet" und durch einen die beiden parallel geschalteten "normalen" Widerstände ersetzt. Etwas "fummelig" aber wenn man die neuen Widerstände auf dem Bord noch mit etwas Heißkleber fixiert, passt alles.
+Ich habe den SMD-Widerstand auf dem Bord "abgelötet" und durch die beiden parallel geschalteten "normalen" Widerstände ersetzt. Etwas "fummelig" aber wenn man die neuen Widerstände auf dem Bord noch mit etwas Heißkleber fixiert, passt alles.
 
 Wichtig:  
 Nach dem Austausch sollten die Referenzwiderstände **gemessen** werden.  
