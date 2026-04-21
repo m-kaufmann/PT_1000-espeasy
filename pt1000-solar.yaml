@@ -8,6 +8,7 @@ esp8266:
 logger:
 
 api:
+  reboot_timeout: 0s
 
 ota:
   - platform: esphome
@@ -22,6 +23,20 @@ wifi:
     password: "vitacola"
 
 captive_portal:
+
+mqtt:
+  broker: !secret mqtt_broker
+  username: !secret mqtt_user
+  password: !secret mqtt_password
+  topic_prefix: pt1000-solar
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+
+web_server:
+  port: 80
 
 # SPI Bus (angepasst auf MAX31865 Beschriftung)
 spi:
@@ -39,6 +54,7 @@ sensor:
   # MAX Nr. 1
   - platform: max31865
     name: "kollektor_1"
+    id: kollektor_1_id
     cs_pin: GPIO5     # D1
     reference_resistance: 4247.0
     rtd_nominal_resistance: 1000.0
@@ -58,6 +74,7 @@ sensor:
   # MAX Nr. 2
   - platform: max31865
     name: "kollektor_2"
+    id: kollektor_2_id
     cs_pin: GPIO0     # D3
     reference_resistance: 4265.0
     rtd_nominal_resistance: 1000.0
@@ -77,6 +94,7 @@ sensor:
   # MAX Nr. 3
   - platform: max31865
     name: "solar_vorlauf"
+    id: solar_vorlauf_id
     cs_pin: GPIO4     # D2
     reference_resistance: 4267.0
     rtd_nominal_resistance: 1000.0
@@ -96,6 +114,7 @@ sensor:
   # MAX Nr. 4
   - platform: max31865
     name: "solar_ruecklauf"
+    id: solar_ruecklauf_id
     cs_pin: GPIO16     # D0
     reference_resistance: 4260.0
     rtd_nominal_resistance: 1000.0
@@ -111,3 +130,34 @@ sensor:
           window_size: 3
           send_every: 3
       - round: 1
+
+text_sensor:
+  - platform: template
+    name: "zeitstempel"
+    id: zeitstempel
+    update_interval: 60s
+    lambda: |-
+      auto now = id(sntp_time).now();
+      if (!now.is_valid()) {
+        return {"Zeit ungültig"};
+      }
+      return {now.strftime("%Y-%m-%d %H:%M:%S")};
+
+interval:
+  - interval: 1min
+    then:
+      - if:
+          condition:
+            and:
+              - mqtt.connected:
+              - time.has_time:
+          then:
+            - mqtt.publish_json:
+                topic: oxolon/DE_RO_AK3/7/solarthermie
+                retain: true
+                payload: |-
+                  root["kollektor_1"] = id(kollektor_1_id).state;
+                  root["kollektor_2"] = id(kollektor_2_id).state;
+                  root["solar_ruecklauf"] = id(solar_ruecklauf_id).state;
+                  root["solar_vorlauf"] = id(solar_vorlauf_id).state;
+                  root["zeitstempel"] = id(sntp_time).now().strftime("%Y-%m-%d %H:%M:%S");
